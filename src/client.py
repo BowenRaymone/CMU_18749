@@ -2,6 +2,10 @@ import socket
 import sys
 import argparse
 
+YELLOW =    "\u001b[33m" # Server color
+MAGENTA =   "\u001b[35m" # Client color
+RESET =     "\u001b[0m"
+
 def get_args():
     parser = argparse.ArgumentParser()
 
@@ -24,14 +28,14 @@ if __name__ == '__main__':
 
     # Connect the socket to the port where the server is listening
     server_address = ('localhost', 10000)
-    print ('connecting to ', server_address)
+    print (MAGENTA + 'connecting to {}'.format(server_address) + RESET)
     sock.connect(server_address)
 
     try:
 
         # Send data
         message = "<{},{}>".format(args.clientname,args.messageid)
-        print('sending ',message)
+        print(MAGENTA + 'sending ', message + RESET)
         sock.sendall(message.encode())
 
         # Look for the response
@@ -39,8 +43,8 @@ if __name__ == '__main__':
         while amount_received < 20:
             data = sock.recv(16)
             amount_received += len(data)
-            print ('received ', data.decode())
+            print (MAGENTA + 'received ', data.decode() + RESET)
             
     finally:
-        print ('closing socket')
+        print (MAGENTA + 'closing socket' + RESET)
         sock.close()

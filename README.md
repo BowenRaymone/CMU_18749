@@ -38,3 +38,8 @@ The port may be specified using ```-p <PORT NUMBER>``` on both client and server
 <a name="todo"></a>
 ## TODO
 - Too many...
+
+<a name="references"></a>
+## References
+- https://github.com/tongerlee/18749-project
+- https://github.com/18749-Team-7
