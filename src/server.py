@@ -12,13 +12,14 @@ RESET =     "\u001b[0m"
 # Server port port + 1: thread for lfd
 
 class Server:
-    def __init__(self, port=10000):
+    def __init__(self, id, port=10000):
         self.port = port
         self.thread_running = True
         # Internal state variable
         self.state_var = 0
+        self.id = id
 
-        # instantiate threads to handle various 
+        # instantiate threads to handle various tasks
         threads = []
 
         try:
@@ -35,13 +36,13 @@ class Server:
             sys.exit()
     
     def handle_client(self):
-        print (YELLOW + 'start client thread' + RESET)
+        print (YELLOW + '[{}] start client thread'.format(self.id) + RESET)
         # Create a TCP/IP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Bind the socket to the port
         server_address = ('localhost', self.port)
-        print (YELLOW + 'starting client on %s port %s' % server_address + RESET)
+        print (YELLOW + '[{}] starting client on {} port {}'.format(self.id, 'localhost', self.port) + RESET)
         sock.bind(server_address)
 
         # Listen for incoming connections
@@ -49,10 +50,10 @@ class Server:
 
         while self.thread_running:
             # Wait for a connection
-            print (YELLOW + 'waiting for a connection' + RESET)
+            #print (YELLOW + 'waiting for a connection' + RESET)
             connection, client_address = sock.accept()
             try:
-                print(YELLOW + 'connection from {}'.format(client_address) + RESET)
+                print(YELLOW + '[{}] connection from {}'.format(self.id, client_address) + RESET)
                 self.state_var += 1
 
                 # Receive the data in small chunks and retransmit it
@@ -61,11 +62,12 @@ class Server:
                 while True:
                     data = connection.recv(16)
                     if data:
-                        # read client name and message id from data with format "<c1,101>"
-                        m = re.findall('<(?P<_0>.+)\,(\d+)>', data.decode())
+                        # read client name and message id from data with format "<c1,0,101>"
+                        m = re.findall('<(?P<_0>.+)\,(\d+),(\d+)>', data.decode())
                         client_name = m[0][0]
-                        message_id = m[0][1]
-                        response = "{}: {}. state_var = {}".format(client_name,message_id,self.state_var)
+                        replica_id = m[0][1]
+                        message_id = m[0][2]
+                        response = "<{},{},{}>. state_var = {}".format(client_name,replica_id,message_id,self.state_var)
                         print(YELLOW + response + RESET)
                         connection.sendall(response.encode())
                     else:
@@ -77,13 +79,13 @@ class Server:
                 connection.close()
     
     def handle_lfd(self):
-        print (YELLOW + 'start lfd thread' + RESET)
+        print (YELLOW + '[{}] start lfd thread'.format(self.id) + RESET)
         # Create a TCP/IP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Bind the socket to the port
         server_address = ('localhost', self.port+1)
-        print (YELLOW + 'starting lfd on %s port %s' % server_address + RESET)
+        print (YELLOW + '[{}] starting lfd on {} port {}'.format(self.id, 'localhost', self.port+1) + RESET)
         sock.bind(server_address)
 
         # Listen for incoming connections
@@ -91,10 +93,10 @@ class Server:
 
         while self.thread_running:
             # Wait for a connection
-            print (YELLOW + 'lfd thread waiting for a connection' + RESET)
+            #print (YELLOW + 'lfd thread waiting for a connection' + RESET)
             connection, client_address = sock.accept()
             try:
-                print(YELLOW + 'lfd connection from {}'.format(client_address) + RESET)
+                print(YELLOW + '[{}] lfd connection from {}'.format(self.id, client_address) + RESET)
 
                 while self.thread_running:
                     data = connection.recv(16).decode()
